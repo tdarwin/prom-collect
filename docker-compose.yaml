@@ -1,0 +1,25 @@
+networks:
+  http-test:
+    driver: bridge
+
+services:
+  fakeprom:
+    image: httpd:2.4
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/usr/local/apache2/htdocs/
+    networks:
+      - http-test
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "13133:13133"
+    networks:
+      - http-test
+    depends_on:
+      - fakeprom
+    environment:
+      - HONEYCOMB_API_KEY

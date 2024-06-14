@@ -1,0 +1,36 @@
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'envoy-stats'
+          scrape_interval: 30s
+          static_configs:
+            - targets: ['fakeprom:80']
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: api.honeycomb.io:443
+    headers:
+      x-honeycomb-team: ${env:HONEYCOMB_API_KEY}
+      x-honeycomb-dataset: prom-collect-test
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions:
+    - health_check
+  pipelines:
+    metrics:
+      receivers:
+        - prometheus
+      processors:
+        - batch
+      exporters:
+        - otlp
+  telemetry:
+    logs:
+      level: debug
